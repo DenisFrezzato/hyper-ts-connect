@@ -16,7 +16,8 @@
     "lint": "eslint src --ext .ts,.js",
     "build": "tsc -p tsconfig.build.json",
     "prettier:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
-    "prettier:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+    "prettier:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "docs": "docs-ts"
   },
   "author": "Denis Frezzato <denis.frezzato@tutanota.com>",
   "license": "MIT",
@@ -35,6 +36,7 @@
     "@typescript-eslint/parser": "^4.28.2",
     "body-parser": "^1.19.0",
     "connect": "^3.7.0",
+    "docs-ts": "^0.6.10",
     "eslint": "^7.30.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.23.4",

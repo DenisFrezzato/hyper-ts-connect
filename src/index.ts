@@ -1,3 +1,6 @@
+/**
+ * @since 0.1.0
+ */
 import * as C from 'connect'
 import * as LL from 'fp-ts-contrib/lib/List'
 import * as E from 'fp-ts/Either'
@@ -7,6 +10,9 @@ import * as H from 'hyper-ts'
 import { Readable } from 'stream'
 import * as qs from 'qs'
 
+/**
+ * @internal
+ */
 export type Action =
   | { type: 'setBody'; body: unknown }
   | { type: 'endResponse' }
@@ -18,7 +24,14 @@ export type Action =
 
 const endResponse: Action = { type: 'endResponse' }
 
+/**
+ * @category Model
+ * @since 0.1.0
+ */
 export class ConnectConnection<S> implements H.Connection<S> {
+  /**
+   * @since 0.1.0
+   */
   public readonly _S!: S
   constructor(
     readonly req: IncomingMessage,
@@ -26,6 +39,9 @@ export class ConnectConnection<S> implements H.Connection<S> {
     readonly actions: LL.List<Action> = LL.nil,
     readonly ended: boolean = false,
   ) {}
+  /**
+   * @since 0.1.0
+   */
   public chain<T>(action: Action, ended = false): ConnectConnection<T> {
     return new ConnectConnection<T>(
       this.req,
@@ -34,27 +50,51 @@ export class ConnectConnection<S> implements H.Connection<S> {
       ended,
     )
   }
+  /**
+   * @since 0.1.0
+   */
   public getRequest(): IncomingMessage {
     return this.req
   }
+  /**
+   * @since 0.1.0
+   */
   public getBody(): unknown {
     return (this.req as any).body
   }
+  /**
+   * @since 0.1.0
+   */
   public getHeader(name: string): unknown {
     return this.req.headers[name]
   }
+  /**
+   * @since 0.1.0
+   */
   public getParams(): unknown {
     return undefined
   }
+  /**
+   * @since 0.1.0
+   */
   public getQuery(): unknown {
     return qs.parse(this.req.url!.split('?')[1])
   }
+  /**
+   * @since 0.1.0
+   */
   public getOriginalUrl(): string {
     return this.req.url!
   }
+  /**
+   * @since 0.1.0
+   */
   public getMethod(): string {
     return this.req.method!
   }
+  /**
+   * @since 0.1.0
+   */
   public setCookie(
     name: string,
     value: string,
@@ -62,27 +102,45 @@ export class ConnectConnection<S> implements H.Connection<S> {
   ): ConnectConnection<H.HeadersOpen> {
     return this.chain({ type: 'setCookie', name, value, options })
   }
+  /**
+   * @since 0.1.0
+   */
   public clearCookie(
     name: string,
     options: H.CookieOptions,
   ): ConnectConnection<H.HeadersOpen> {
     return this.chain({ type: 'clearCookie', name, options })
   }
+  /**
+   * @since 0.1.0
+   */
   public setHeader(
     name: string,
     value: string,
   ): ConnectConnection<H.HeadersOpen> {
     return this.chain({ type: 'setHeader', name, value })
   }
+  /**
+   * @since 0.1.0
+   */
   public setStatus(status: H.Status): ConnectConnection<H.HeadersOpen> {
     return this.chain({ type: 'setStatus', status })
   }
+  /**
+   * @since 0.1.0
+   */
   public setBody(body: unknown): ConnectConnection<H.ResponseEnded> {
     return this.chain({ type: 'setBody', body }, true)
   }
+  /**
+   * @since 0.1.0
+   */
   public pipeStream(stream: Readable): ConnectConnection<H.ResponseEnded> {
     return this.chain({ type: 'pipeStream', stream }, true)
   }
+  /**
+   * @since 0.1.0
+   */
   public endResponse(): ConnectConnection<H.ResponseEnded> {
     return this.chain(endResponse, true)
   }
@@ -134,10 +192,16 @@ const exec =
       }),
     )
 
+/**
+ * @since 0.1.0
+ */
 export const toRequestHandler = <I, O, L>(
   middleware: H.Middleware<I, O, L, void>,
 ): C.NextHandleFunction => exec(middleware)
 
+/**
+ * @since 0.1.0
+ */
 export const fromRequestHandler =
   <I = H.StatusOpen, E = never, A = never>(
     requestHandler: C.NextHandleFunction,
