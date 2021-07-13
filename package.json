@@ -43,6 +43,7 @@
     "eslint-plugin-node": "^11.1.0",
     "fp-ts": "^2.8.1",
     "fp-ts-contrib": "^0.1.17",
+    "fp-ts-routing": "^0.5.4",
     "husky": "^4.3.8",
     "hyper-ts": "^0.6.5",
     "io-ts": "^2.2.9",
