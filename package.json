@@ -30,7 +30,7 @@
     "@types/connect": "^3.4.34",
     "@types/jest": "^26.0.23",
     "@types/node": "^14.0.27",
-    "@types/qs": "^6.9.4",
+    "@types/qs": "^6.9.7",
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
@@ -51,7 +51,6 @@
     "jest": "^27.0.6",
     "lint-staged": "^11.0.0",
     "prettier": "^2.0.5",
-    "qs": "^6.10.1",
     "supertest": "^6.1.3",
     "ts-jest": "^27.0.3",
     "ts-node": "^8.10.2"
@@ -91,5 +90,8 @@
       "prettier --write",
       "npm run lint"
     ]
+  },
+  "dependencies": {
+    "qs": "^6.10.1"
   }
 }
