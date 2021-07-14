@@ -69,6 +69,9 @@ export class ConnectConnection<S> implements H.Connection<S> {
     return this.req.headers[name]
   }
   /**
+   * `connect` doesn't have a router, so this will always return `undefined`.
+   * For a type safe router, see [fp-ts-routing](https://github.com/gcanti/fp-ts-routing).
+   *
    * @since 0.1.0
    */
   public getParams(): unknown {
@@ -93,6 +96,8 @@ export class ConnectConnection<S> implements H.Connection<S> {
     return this.req.method!
   }
   /**
+   * Not implemented.
+   *
    * @since 0.1.0
    */
   public setCookie(
@@ -103,6 +108,8 @@ export class ConnectConnection<S> implements H.Connection<S> {
     return this.chain({ type: 'setCookie', name, value, options })
   }
   /**
+   * Not implemented.
+   *
    * @since 0.1.0
    */
   public clearCookie(

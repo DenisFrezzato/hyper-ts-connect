@@ -97,6 +97,9 @@ Added in v0.1.0
 
 ### getParams (method)
 
+`connect` doesn't have a router, so this will always return `undefined`.
+For a type safe router, see [fp-ts-routing](https://github.com/gcanti/fp-ts-routing).
+
 **Signature**
 
 ```ts
@@ -137,6 +140,8 @@ Added in v0.1.0
 
 ### setCookie (method)
 
+Not implemented.
+
 **Signature**
 
 ```ts
@@ -150,6 +155,8 @@ public setCookie(
 Added in v0.1.0
 
 ### clearCookie (method)
+
+Not implemented.
 
 **Signature**
 
