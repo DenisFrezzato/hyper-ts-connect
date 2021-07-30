@@ -3,7 +3,7 @@ title: Home
 nav_order: 1
 ---
 
-An adapter which lets you use https://github.com/gcanti/hyper-ts with https://github.com/senchalabs/connect.
+An adapter which lets you use [`hyper-ts`](https://github.com/gcanti/hyper-ts) with [`connect`](https://github.com/senchalabs/connect).
 
 # Usage
 
