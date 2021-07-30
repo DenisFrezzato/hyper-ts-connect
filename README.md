@@ -6,3 +6,11 @@ The `examples` directory has comprehensive examples; also tests have plenty of s
 
 Please refer to hyper-ts's documentation for its usage.
 
+# Documentation
+
+- [API Reference](https://gcanti.github.io/hyper-ts/)
+
+# Missing features
+
+`setCookie` and `clearCookie` are not implemented (yet).
+
