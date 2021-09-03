@@ -7,6 +7,7 @@ import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 import { IncomingMessage, ServerResponse } from 'http'
 import * as H from 'hyper-ts'
+import * as M from 'hyper-ts/lib/Middleware'
 import { Readable } from 'stream'
 import * as qs from 'qs'
 
@@ -179,13 +180,13 @@ const run = (res: ServerResponse, action: Action): ServerResponse => {
 }
 
 const exec =
-  <I, O, L>(middleware: H.Middleware<I, O, L, void>) =>
+  <I, O, L>(middleware: M.Middleware<I, O, L, void>) =>
   (
     req: IncomingMessage,
     res: ServerResponse,
     next: C.NextFunction,
   ): Promise<void> =>
-    H.execMiddleware(middleware, new ConnectConnection<I>(req, res))().then(
+    M.execMiddleware(middleware, new ConnectConnection<I>(req, res))().then(
       E.fold(next, (c) => {
         const { actions: list, res, ended } = c as ConnectConnection<O>
         const len = list.length
@@ -203,7 +204,7 @@ const exec =
  * @since 0.1.0
  */
 export const toRequestHandler = <I, O, L>(
-  middleware: H.Middleware<I, O, L, void>,
+  middleware: M.Middleware<I, O, L, void>,
 ): C.NextHandleFunction => exec(middleware)
 
 /**
@@ -214,7 +215,7 @@ export const fromRequestHandler =
     requestHandler: C.NextHandleFunction,
     f: (req: IncomingMessage) => E.Either<E, A>,
     onError: (reason: unknown) => E,
-  ): H.Middleware<I, I, E, A> =>
+  ): M.Middleware<I, I, E, A> =>
   (c) =>
   () =>
     new Promise((resolve) => {

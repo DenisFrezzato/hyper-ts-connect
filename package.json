@@ -1,6 +1,6 @@
 {
   "name": "hyper-ts-connect",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "hyper-ts adapter for connect.",
   "files": [
     "dist"
@@ -45,7 +45,7 @@
     "fp-ts-contrib": "^0.1.17",
     "fp-ts-routing": "^0.5.4",
     "husky": "^4.3.8",
-    "hyper-ts": "^0.6.5",
+    "hyper-ts": "^0.7.0",
     "io-ts": "^2.2.9",
     "io-ts-types": "^0.5.9",
     "jest": "^27.0.6",
@@ -59,7 +59,7 @@
     "connect": "^3.7.0",
     "fp-ts": "^2.8.1",
     "fp-ts-contrib": "^0.1.17",
-    "hyper-ts": "^0.6.5"
+    "hyper-ts": "^0.7.1"
   },
   "tags": [
     "typescript",

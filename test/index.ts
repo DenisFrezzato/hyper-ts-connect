@@ -2,6 +2,7 @@ import * as assert from 'assert'
 import * as E from 'fp-ts/Either'
 import { flow, pipe } from 'fp-ts/function'
 import * as H from 'hyper-ts'
+import * as M from 'hyper-ts/lib/Middleware'
 import * as t from 'io-ts'
 import { failure } from 'io-ts/lib/PathReporter'
 import { fromRequestHandler, toRequestHandler } from '../src'
@@ -12,11 +13,11 @@ import { Readable } from 'stream'
 
 export const sendStatus = <E>(
   status: H.Status,
-): H.Middleware<H.StatusOpen, H.ResponseEnded, E, void> =>
+): M.Middleware<H.StatusOpen, H.ResponseEnded, E, void> =>
   pipe(
-    H.status(status),
-    H.ichain(() => H.closeHeaders()),
-    H.ichain(() => H.end()),
+    M.status(status),
+    M.ichain(() => M.closeHeaders()),
+    M.ichain(() => M.end()),
   )
 
 export const sendOK = <E>() => sendStatus<E>(H.Status.OK)
@@ -27,9 +28,9 @@ describe('ConnectConnection', () => {
       const server = connect()
       const somePath = '/users?q=Ninkasi'
       const m = pipe(
-        H.fromConnection((c) => E.right(c.getOriginalUrl())),
-        H.chain((url) => H.rightIO(() => assert.strictEqual(url, somePath))),
-        H.ichain(() => sendOK()),
+        M.fromConnection((c) => E.right(c.getOriginalUrl())),
+        M.chain((url) => M.rightIO(() => assert.strictEqual(url, somePath))),
+        M.ichain(() => sendOK()),
       )
       server.use(toRequestHandler(m))
 
@@ -41,9 +42,9 @@ describe('ConnectConnection', () => {
     it('should write the status code', () => {
       const server = connect()
       const m = pipe(
-        H.status(H.Status.OK),
-        H.ichain(() => H.closeHeaders()),
-        H.ichain(() => H.end()),
+        M.status(H.Status.OK),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() => M.end()),
       )
       server.use(toRequestHandler(m))
 
@@ -55,10 +56,10 @@ describe('ConnectConnection', () => {
     it('should write the headers', () => {
       const server = connect()
       const m = pipe(
-        H.status(H.Status.OK),
-        H.ichain(() => H.header('name', 'value')),
-        H.ichain(() => H.closeHeaders()),
-        H.ichain(() => H.end()),
+        M.status(H.Status.OK),
+        M.ichain(() => M.header('name', 'value')),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() => M.end()),
       )
       server.use(toRequestHandler(m))
 
@@ -70,9 +71,9 @@ describe('ConnectConnection', () => {
     it('should send the content', () => {
       const server = connect()
       const m = pipe(
-        H.status(H.Status.OK),
-        H.ichain(() => H.closeHeaders()),
-        H.ichain(() => H.send('This is the content')),
+        M.status(H.Status.OK),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() => M.send('This is the content')),
       )
       server.use(toRequestHandler(m))
 
@@ -84,8 +85,8 @@ describe('ConnectConnection', () => {
     it('should add the proper header and send the content', () => {
       const server = connect()
       const m = pipe(
-        H.status(H.Status.OK),
-        H.ichain(() => H.json({ a: 1 }, E.toError)),
+        M.status(H.Status.OK),
+        M.ichain(() => M.json({ a: 1 }, E.toError)),
       )
       server.use(toRequestHandler(m))
 
@@ -100,10 +101,10 @@ describe('ConnectConnection', () => {
     it('should add the `Content-Type` header', () => {
       const server = connect()
       const m = pipe(
-        H.status(H.Status.OK),
-        H.ichain(() => H.contentType(H.MediaType.applicationXML)),
-        H.ichain(() => H.closeHeaders()),
-        H.ichain(() => H.end()),
+        M.status(H.Status.OK),
+        M.ichain(() => M.contentType(H.MediaType.applicationXML)),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() => M.end()),
       )
       server.use(toRequestHandler(m))
 
@@ -118,9 +119,9 @@ describe('ConnectConnection', () => {
     it('should add the correct status / header', () => {
       const server = connect()
       const m = pipe(
-        H.redirect('/users'),
-        H.ichain(() => H.closeHeaders()),
-        H.ichain(() => H.end()),
+        M.redirect('/users'),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() => M.end()),
       )
       server.use(toRequestHandler(m))
 
@@ -133,11 +134,11 @@ describe('ConnectConnection', () => {
       const Query = t.type({ q: t.string })
       const server = connect()
       const m = pipe(
-        H.decodeQuery(Query.decode),
-        H.chain((query) =>
-          H.rightIO(() => assert.deepStrictEqual(query, { q: 'tobi ferret' })),
+        M.decodeQuery(Query.decode),
+        M.chain((query) =>
+          M.rightIO(() => assert.deepStrictEqual(query, { q: 'tobi ferret' })),
         ),
-        H.ichain(() => sendOK()),
+        M.ichain(() => sendOK()),
       )
       server.use(toRequestHandler(m))
 
@@ -151,16 +152,16 @@ describe('ConnectConnection', () => {
       })
       const server = connect()
       const m = pipe(
-        H.decodeQuery(Query.decode),
-        H.chain((query) =>
-          H.rightIO(() =>
+        M.decodeQuery(Query.decode),
+        M.chain((query) =>
+          M.rightIO(() =>
             assert.deepStrictEqual(query, {
               order: 'desc',
               shoe: { color: 'blue', type: 'converse' },
             }),
           ),
         ),
-        H.ichain(() => sendOK()),
+        M.ichain(() => sendOK()),
       )
       server.use(toRequestHandler(m))
 
@@ -173,16 +174,16 @@ describe('ConnectConnection', () => {
       const Query = t.type({ q: t.number })
       const server = connect()
       const m = pipe(
-        H.decodeQuery(Query.decode),
-        H.ichain(() => sendOK()),
-        H.orElse((errors) =>
+        M.decodeQuery(Query.decode),
+        M.ichain(() => sendOK()),
+        M.orElse((errors) =>
           pipe(
-            H.rightIO(() =>
+            M.rightIO(() =>
               assert.deepStrictEqual(failure(errors), [
                 'Invalid value "tobi ferret" supplied to : { q: number }/q: number',
               ]),
             ),
-            H.ichain(() => sendStatus(H.Status.BadRequest)),
+            M.ichain(() => sendStatus(H.Status.BadRequest)),
           ),
         ),
       )
@@ -201,11 +202,11 @@ describe('ConnectConnection', () => {
     it('should validate the method (success case)', () => {
       const server = connect()
       const m = pipe(
-        H.decodeMethod(HttpMethod.decode),
-        H.chain((method) =>
-          H.rightIO(() => assert.deepStrictEqual(method, 'GET')),
+        M.decodeMethod(HttpMethod.decode),
+        M.chain((method) =>
+          M.rightIO(() => assert.deepStrictEqual(method, 'GET')),
         ),
-        H.ichain(() => sendOK()),
+        M.ichain(() => sendOK()),
       )
       server.use(toRequestHandler(m))
 
@@ -216,16 +217,16 @@ describe('ConnectConnection', () => {
       const server = connect()
       server.use(bodyParser.json())
       const m = pipe(
-        H.decodeMethod(HttpMethod.decode),
-        H.ichain(() => sendOK()),
-        H.orElse((errors) =>
+        M.decodeMethod(HttpMethod.decode),
+        M.ichain(() => sendOK()),
+        M.orElse((errors) =>
           pipe(
-            H.rightIO(() =>
+            M.rightIO(() =>
               assert.deepStrictEqual(failure(errors), [
                 'Invalid value "PATCH" supplied to : "GET" | "POST"',
               ]),
             ),
-            H.ichain(() => sendStatus(H.Status.MethodNotAllowed)),
+            M.ichain(() => sendStatus(H.Status.MethodNotAllowed)),
           ),
         ),
       )
@@ -241,11 +242,11 @@ describe('ConnectConnection', () => {
       const server = connect()
       server.use(bodyParser.json())
       const m = pipe(
-        H.decodeBody(Body.decode),
-        H.chain((body) =>
-          H.rightIO(() => assert.deepStrictEqual(body, { x: 42 })),
+        M.decodeBody(Body.decode),
+        M.chain((body) =>
+          M.rightIO(() => assert.deepStrictEqual(body, { x: 42 })),
         ),
-        H.ichain(() => sendOK()),
+        M.ichain(() => sendOK()),
       )
       server.use(toRequestHandler(m))
 
@@ -257,16 +258,16 @@ describe('ConnectConnection', () => {
       const server = connect()
       server.use(bodyParser.json())
       const m = pipe(
-        H.decodeBody(Body.decode),
-        H.ichain(() => sendOK()),
-        H.orElse((errors) =>
+        M.decodeBody(Body.decode),
+        M.ichain(() => sendOK()),
+        M.orElse((errors) =>
           pipe(
-            H.rightIO(() =>
+            M.rightIO(() =>
               assert.deepStrictEqual(failure(errors), [
                 'Invalid value "a" supplied to : number',
               ]),
             ),
-            H.ichain(() => sendStatus(H.Status.BadRequest)),
+            M.ichain(() => sendStatus(H.Status.BadRequest)),
           ),
         ),
       )
@@ -280,11 +281,11 @@ describe('ConnectConnection', () => {
     it('should validate a header (success case)', () => {
       const server = connect()
       const m = pipe(
-        H.decodeHeader('token', t.string.decode),
-        H.chain((header) =>
-          H.rightIO(() => assert.strictEqual(header, 'mytoken')),
+        M.decodeHeader('token', t.string.decode),
+        M.chain((header) =>
+          M.rightIO(() => assert.strictEqual(header, 'mytoken')),
         ),
-        H.ichain(() => sendOK()),
+        M.ichain(() => sendOK()),
       )
       server.use(toRequestHandler(m))
 
@@ -294,16 +295,16 @@ describe('ConnectConnection', () => {
     it('should validate a header (failure case)', () => {
       const server = connect()
       const m = pipe(
-        H.decodeHeader('token', t.string.decode),
-        H.ichain(() => sendOK()),
-        H.orElse((errors) =>
+        M.decodeHeader('token', t.string.decode),
+        M.ichain(() => sendOK()),
+        M.orElse((errors) =>
           pipe(
-            H.rightIO(() =>
+            M.rightIO(() =>
               assert.deepStrictEqual(failure(errors), [
                 'Invalid value undefined supplied to : string',
               ]),
             ),
-            H.ichain(() => sendStatus(H.Status.BadRequest)),
+            M.ichain(() => sendStatus(H.Status.BadRequest)),
           ),
         ),
       )
@@ -316,8 +317,8 @@ describe('ConnectConnection', () => {
   it('should handle the error', () => {
     const server = connect()
     const m = pipe(
-      H.left<H.StatusOpen, string, void>('error'),
-      H.ichain(() => sendOK()),
+      M.left<H.StatusOpen, string, void>('error'),
+      M.ichain(() => sendOK()),
     )
     server.use(toRequestHandler(m))
 
@@ -334,8 +335,8 @@ describe('ConnectConnection', () => {
     const Body = t.type({ name: t.string })
     const bodyDecoder = pipe(
       jsonMiddleware,
-      H.ichain(() =>
-        H.decodeBody(
+      M.ichain(() =>
+        M.decodeBody(
           flow(
             Body.decode,
             E.mapLeft(() => 'invalid body'),
@@ -346,18 +347,18 @@ describe('ConnectConnection', () => {
 
     const helloHandler = pipe(
       bodyDecoder,
-      H.ichain(({ name }) =>
+      M.ichain(({ name }) =>
         pipe(
-          H.status<string>(H.Status.OK),
-          H.ichain(() => H.closeHeaders()),
-          H.ichain(() => H.send(`Hello ${name}!`)),
+          M.status<string>(H.Status.OK),
+          M.ichain(() => M.closeHeaders()),
+          M.ichain(() => M.send(`Hello ${name}!`)),
         ),
       ),
-      H.orElse((err) =>
+      M.orElse((err) =>
         pipe(
-          H.status(H.Status.BadRequest),
-          H.ichain(() => H.closeHeaders()),
-          H.ichain(() => H.send(err)),
+          M.status(H.Status.BadRequest),
+          M.ichain(() => M.closeHeaders()),
+          M.ichain(() => M.send(err)),
         ),
       ),
     )
@@ -389,9 +390,9 @@ describe('ConnectConnection', () => {
 
       const stream = someStream()
       const m = pipe(
-        H.status(H.Status.OK),
-        H.ichain(() => H.closeHeaders()),
-        H.ichain(() => H.pipeStream(stream)),
+        M.status(H.Status.OK),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() => M.pipeStream(stream)),
       )
       server.use(toRequestHandler(m))
 
