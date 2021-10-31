@@ -197,7 +197,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-public setBody(body: unknown): ConnectConnection<H.ResponseEnded>
+public setBody(body: string | Buffer): ConnectConnection<H.ResponseEnded>
 ```
 
 Added in v0.1.0
@@ -207,7 +207,9 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-public pipeStream(stream: Readable): ConnectConnection<H.ResponseEnded>
+public pipeStream(
+    stream: NodeJS.ReadableStream,
+  ): ConnectConnection<H.ResponseEnded>
 ```
 
 Added in v0.1.0
@@ -243,7 +245,7 @@ export declare const fromRequestHandler: <I = H.StatusOpen, E = never, A = never
   requestHandler: C.NextHandleFunction,
   f: (req: IncomingMessage) => E.Either<E, A>,
   onError: (reason: unknown) => E
-) => H.Middleware<I, I, E, A>
+) => M.Middleware<I, I, E, A>
 ```
 
 Added in v0.1.0
@@ -253,7 +255,7 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const toRequestHandler: <I, O, L>(middleware: H.Middleware<I, O, L, void>) => C.NextHandleFunction
+export declare const toRequestHandler: <I, O, L>(middleware: M.Middleware<I, O, L, void>) => C.NextHandleFunction
 ```
 
 Added in v0.1.0

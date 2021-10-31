@@ -8,20 +8,19 @@ import { pipe } from 'fp-ts/function'
 import { IncomingMessage, ServerResponse } from 'http'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
-import { Readable } from 'stream'
 import * as qs from 'qs'
 
 /**
  * @internal
  */
 export type Action =
-  | { type: 'setBody'; body: unknown }
+  | { type: 'setBody'; body: string | Buffer }
   | { type: 'endResponse' }
   | { type: 'setStatus'; status: H.Status }
   | { type: 'setHeader'; name: string; value: string }
   | { type: 'clearCookie'; name: string; options: H.CookieOptions }
   | { type: 'setCookie'; name: string; value: string; options: H.CookieOptions }
-  | { type: 'pipeStream'; stream: Readable }
+  | { type: 'pipeStream'; stream: NodeJS.ReadableStream }
 
 const endResponse: Action = { type: 'endResponse' }
 
@@ -137,13 +136,15 @@ export class ConnectConnection<S> implements H.Connection<S> {
   /**
    * @since 0.1.0
    */
-  public setBody(body: unknown): ConnectConnection<H.ResponseEnded> {
+  public setBody(body: string | Buffer): ConnectConnection<H.ResponseEnded> {
     return this.chain({ type: 'setBody', body }, true)
   }
   /**
    * @since 0.1.0
    */
-  public pipeStream(stream: Readable): ConnectConnection<H.ResponseEnded> {
+  public pipeStream(
+    stream: NodeJS.ReadableStream,
+  ): ConnectConnection<H.ResponseEnded> {
     return this.chain({ type: 'pipeStream', stream }, true)
   }
   /**
