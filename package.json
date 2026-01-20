@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/DenisFrezzato/hyper-ts-connect",
   "devDependencies": {
-    "@types/body-parser": "^1.19.0",
+    "@types/body-parser": "^1.19.6",
     "@types/connect": "^3.4.34",
     "@types/jest": "^29.5.14",
     "@types/node": "^14.0.27",
@@ -34,7 +34,7 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
-    "body-parser": "^1.19.0",
+    "body-parser": "^2.2.2",
     "connect": "^3.7.0",
     "docs-ts": "^0.6.10",
     "eslint": "^7.30.0",
