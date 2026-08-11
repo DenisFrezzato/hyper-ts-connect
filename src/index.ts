@@ -5,10 +5,13 @@ import * as C from 'connect'
 import * as LL from 'fp-ts-contrib/lib/List'
 import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
+import * as IO from 'fp-ts/IO'
+import * as O from 'fp-ts/Option'
 import { IncomingMessage, ServerResponse } from 'http'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as qs from 'qs'
+import { pipeline } from 'stream'
 
 /**
  * @internal
@@ -20,7 +23,11 @@ export type Action =
   | { type: 'setHeader'; name: string; value: string }
   | { type: 'clearCookie'; name: string; options: H.CookieOptions }
   | { type: 'setCookie'; name: string; value: string; options: H.CookieOptions }
-  | { type: 'pipeStream'; stream: NodeJS.ReadableStream }
+  | {
+      type: 'pipeStream'
+      stream: NodeJS.ReadableStream
+      onError: (e: unknown) => IO.IO<void>
+    }
 
 const endResponse: Action = { type: 'endResponse' }
 
@@ -144,8 +151,9 @@ export class ConnectConnection<S> implements H.Connection<S> {
    */
   public pipeStream(
     stream: NodeJS.ReadableStream,
+    onError: (e: unknown) => IO.IO<void>,
   ): ConnectConnection<H.ResponseEnded> {
-    return this.chain({ type: 'pipeStream', stream }, true)
+    return this.chain({ type: 'pipeStream', stream, onError }, true)
   }
   /**
    * @since 0.1.0
@@ -176,7 +184,9 @@ const run = (res: ServerResponse, action: Action): ServerResponse => {
       res.statusCode = action.status
       return res
     case 'pipeStream':
-      return action.stream.pipe(res)
+      return pipeline(action.stream, res, (err) =>
+        pipe(err, O.fromNullable, O.traverse(IO.Applicative)(action.onError))(),
+      )
   }
 }
 
