@@ -209,6 +209,7 @@ Added in v0.1.0
 ```ts
 public pipeStream(
     stream: NodeJS.ReadableStream,
+    onError: (e: unknown) => IO.IO<void>,
   ): ConnectConnection<H.ResponseEnded>
 ```
 

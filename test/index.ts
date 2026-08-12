@@ -1,6 +1,6 @@
 import * as assert from 'assert'
 import * as E from 'fp-ts/Either'
-import { flow, pipe } from 'fp-ts/function'
+import { constVoid, flow, pipe } from 'fp-ts/function'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as t from 'io-ts'
@@ -379,24 +379,39 @@ describe('ConnectConnection', () => {
   describe('pipeStream', () => {
     it('should pipe a stream', () => {
       const server = connect()
-      const someStream = (): Readable => {
-        const stream = new Readable()
-        setTimeout(() => {
-          stream.push('a')
-          stream.push(null)
-        }, 1)
-        return stream
-      }
-
-      const stream = someStream()
+      const stream = Readable.from(['a'])
       const m = pipe(
         M.status(H.Status.OK),
         M.ichain(() => M.closeHeaders()),
-        M.ichain(() => M.pipeStream(stream)),
+        M.ichain(() => M.pipeStream(stream, () => () => undefined)),
       )
       server.use(toRequestHandler(m))
 
       return supertest(server).get('/').expect(200, 'a')
+    })
+
+    it('should call the error handler on stream error', async () => {
+      const server = connect()
+      const error = new Error('nope')
+      const stream = new Readable({
+        read() {
+          this.destroy(error)
+        },
+      })
+      let caught: unknown
+      const m = pipe(
+        M.status(H.Status.OK),
+        M.ichain(() => M.closeHeaders()),
+        M.ichain(() =>
+          M.pipeStream(stream, (e) => () => {
+            caught = e
+          }),
+        ),
+      )
+      server.use(toRequestHandler(m))
+
+      await supertest(server).get('/').expect(200).catch(constVoid)
+      assert.strictEqual(caught, error)
     })
   })
 })
