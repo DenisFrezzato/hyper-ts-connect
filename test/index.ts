@@ -20,6 +20,12 @@ export const sendStatus = <E>(
     M.ichain(() => M.end()),
   )
 
+const deferred = (): { promise: Promise<void>; resolve: () => void } => {
+  let resolve: () => void = constVoid
+  const promise = new Promise<void>((res) => (resolve = res))
+  return { promise, resolve }
+}
+
 export const sendOK = <E>() => sendStatus<E>(H.Status.OK)
 
 describe('ConnectConnection', () => {
@@ -412,6 +418,59 @@ describe('ConnectConnection', () => {
 
       await supertest(server).get('/').expect(200).catch(constVoid)
       assert.strictEqual(caught, error)
+    })
+
+    it('should not pipe into a destroyed response', async () => {
+      const stream = Readable.from(['a'])
+      const requested = deferred()
+      const disconnected = deferred()
+      const handled = deferred()
+
+      let thrown: unknown
+
+      const middleware = pipe(
+        M.status(H.Status.OK),
+        M.ichain(() => M.closeHeaders()),
+        // Hold the middleware until the client is gone, so that the actions are
+        // replayed on an already destroyed response.
+        M.ichain(() =>
+          M.rightTask<H.BodyOpen, never, void>(() => disconnected.promise),
+        ),
+        M.ichain(() => M.pipeStream(stream, () => () => undefined)),
+      )
+      const handler = toRequestHandler(middleware)
+
+      const server = connect()
+
+      server.use((_req, res, next) => {
+        res.on('close', disconnected.resolve)
+        requested.resolve()
+        next()
+      })
+
+      server.use(async (req, res) => {
+        try {
+          await handler(req, res, constVoid)
+        } catch (e) {
+          thrown = e
+        }
+        handled.resolve()
+      })
+
+      const listening = server.listen(0)
+
+      try {
+        const request = supertest(listening).get('/')
+        request.end(constVoid)
+        await requested.promise
+        request.abort()
+        await handled.promise
+
+        assert.strictEqual(thrown, undefined)
+        assert.strictEqual(stream.destroyed, true)
+      } finally {
+        listening.close()
+      }
     })
   })
 })
