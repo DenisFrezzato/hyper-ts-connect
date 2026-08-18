@@ -6,12 +6,11 @@ import * as LL from 'fp-ts-contrib/lib/List'
 import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 import * as IO from 'fp-ts/IO'
-import * as O from 'fp-ts/Option'
 import { IncomingMessage, ServerResponse } from 'http'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as qs from 'qs'
-import { pipeline } from 'stream'
+import { Readable, pipeline } from 'stream'
 
 /**
  * @internal
@@ -184,8 +183,18 @@ const run = (res: ServerResponse, action: Action): ServerResponse => {
       res.statusCode = action.status
       return res
     case 'pipeStream':
+      // Actions are replayed after the middleware has completed, so the client
+      // may have disconnected in the meanwhile. Piping into a destroyed stream
+      // throws ERR_STREAM_UNABLE_TO_PIPE synchronously, and `pipeline` would
+      // never get the chance to clean up the source stream.
+      if (res.destroyed) {
+        if (action.stream instanceof Readable) {
+          action.stream.destroy()
+        }
+        return res
+      }
       return pipeline(action.stream, res, (err) =>
-        pipe(err, O.fromNullable, O.traverse(IO.Applicative)(action.onError))(),
+        err ? action.onError(err)() : undefined,
       )
   }
 }
@@ -216,7 +225,11 @@ const exec =
  */
 export const toRequestHandler = <I, O, L>(
   middleware: M.Middleware<I, O, L, void>,
-): C.NextHandleFunction => exec(middleware)
+): ((
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: C.NextFunction,
+) => Promise<void>) => exec(middleware)
 
 /**
  * @since 0.1.0
