@@ -10,7 +10,7 @@ import { IncomingMessage, ServerResponse } from 'http'
 import * as H from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as qs from 'qs'
-import { Readable, pipeline } from 'stream'
+import { pipeline, Readable } from 'stream'
 
 /**
  * @internal
@@ -188,9 +188,7 @@ const run = (res: ServerResponse, action: Action): ServerResponse => {
       // throws ERR_STREAM_UNABLE_TO_PIPE synchronously, and `pipeline` would
       // never get the chance to clean up the source stream.
       if (res.destroyed) {
-        if (action.stream instanceof Readable) {
-          action.stream.destroy()
-        }
+        ;(action.stream as Partial<Readable>).destroy?.()
         return res
       }
       return pipeline(action.stream, res, (err) =>
